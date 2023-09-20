@@ -24,11 +24,11 @@ def tiene_entidades(archivo, entidades):
     return False
 
 # Ruta de la carpeta de entrada y salida
-input_folder = "C:/Users/lucho/OneDrive/Documentos/Nueva carpeta/clapgruphackingEnTextoplano/"
-output_folder = "C:/Users/lucho/OneDrive/Documentos/Nueva carpeta/clapgruphackingfiltradosyordenados/filtrados/a"
+input_folder = "CARPETA DE ENTRADA"
+output_folder = "CARPETA DE SALIDA"
 
 # Ruta absoluta del archivo de progreso en la ubicación deseada
-ruta_progreso = "C:/Users/lucho/Downloads/Nueva/progreso.txt"
+ruta_progreso = "progreso.txt"
 
 # Lista de archivos a procesar
 archivos_a_procesar = []
