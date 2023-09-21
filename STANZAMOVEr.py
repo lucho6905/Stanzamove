@@ -8,11 +8,8 @@ from tqdm import tqdm
 stanza.download("en")  # Descarga el modelo de idioma en inglés
 nlp = stanza.Pipeline("en", processors="tokenize,ner")
 
-# Función para verificar si hay entidades específicas en un archivo
-def tiene_entidades(archivo, entidades):
-    with open(archivo, "r", encoding="utf-8") as f:
-        texto = f.read()
-
+# Función para verificar si hay entidades específicas en un texto
+def tiene_entidades(texto, entidades):
     # Procesar el texto para etiquetar entidades
     doc = nlp(texto)
 
@@ -29,6 +26,9 @@ output_folder = "CARPETA DE SALIDA"
 
 # Ruta absoluta del archivo de progreso en la ubicación deseada
 ruta_progreso = "progreso.txt"
+
+# Tamaño del fragmento en caracteres
+tamaño_fragmento = 10000  # Ajusta el tamaño del fragmento según tus necesidades
 
 # Lista de archivos a procesar
 archivos_a_procesar = []
@@ -57,16 +57,31 @@ with concurrent.futures.ThreadPoolExecutor() as executor, tqdm(total=total_archi
     for archivo_path in archivos_a_procesar:
         print(f"Procesando archivo: {archivo_path}")  # Mensaje de depuración
 
-        # Verificar si hay entidades específicas
-        tiene_entidades_result = tiene_entidades(archivo_path, ["PERSON", "ORG", "GPE", "EMAIL", "URL",
-                                                                "PHONE", "ID", "MEDICAL"])
+        # Leer el archivo completo
+        with open(archivo_path, "r", encoding="utf-8") as file:
+            texto_completo = file.read()
 
-        # Mover el archivo si tiene entidades
-        if tiene_entidades_result:
+        # Dividir el texto en fragmentos de tamaño específico
+        fragmentos = [texto_completo[i:i+tamaño_fragmento] for i in range(0, len(texto_completo), tamaño_fragmento)]
+
+        # Flag para determinar si se encontraron entidades en el archivo actual
+        entities_found = False
+
+        # Procesar fragmentos
+        for fragmento in fragmentos:
+            if tiene_entidades(fragmento, ["PERSON", "ORG", "GPE", "EMAIL", "URL", "PHONE", "ID", "MEDICAL"]):
+                entities_found = True
+                break  # Detener el procesamiento si se encuentran entidades
+
+        # Crear el directorio de destino si no existe
+        nuevo_path = os.path.join(output_folder, os.path.relpath(archivo_path, input_folder))
+        os.makedirs(os.path.dirname(nuevo_path), exist_ok=True)
+
+        # Mover el archivo si se encontraron entidades
+        if entities_found:
             print(f"Moviendo archivo: {archivo_path}")  # Mensaje de depuración
 
             # Mover el archivo
-            nuevo_path = os.path.join(output_folder, os.path.relpath(archivo_path, input_folder))
             shutil.move(archivo_path, nuevo_path)
 
         # Registrar el archivo como procesado
@@ -80,3 +95,4 @@ with concurrent.futures.ThreadPoolExecutor() as executor, tqdm(total=total_archi
         pbar.update(1)
 
 print("Proceso completado.")
+
